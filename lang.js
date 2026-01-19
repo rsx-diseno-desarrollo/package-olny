@@ -67,10 +67,7 @@
   //    Define estas funciones en tus scripts principales para regenerar selects/tablas usando tDisplay().
   function rerenderExcelDrivenUI() {
     if (typeof window.renderEmpaqueSelects === 'function') window.renderEmpaqueSelects();
-    if (typeof window.renderProductoSelects === 'function') window.renderProductoSelects();
     if (typeof window.renderEmpaqueTable === 'function')   window.renderEmpaqueTable();
-    if (typeof window.renderComponentView === 'function')   window.renderComponentView();
-    if (typeof window.renderComponentSelects === 'function') window.renderComponentSelects()
     if (typeof window.renderTstsSelects === 'function') window.renderTstsSelects();
   }
 
