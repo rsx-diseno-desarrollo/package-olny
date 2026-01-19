@@ -83,4 +83,7 @@
 "PLANTILLA": { "es": "PLANTILLA", "en": "Template" },
 "MUESTRA": { "es": "MUESTRA", "en": "Sample" }
 
+
+"Bienvenido": {"es": "Bienvenido", "en": "Welcome"},
+"Selecciona una sección para empezar a buscar": {"es": "Selecciona una sección para empezar a buscar", "en": "Select a section to start searching"}
 }
