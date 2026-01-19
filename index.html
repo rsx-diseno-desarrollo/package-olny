@@ -19,7 +19,7 @@ Nota: Este sitio y su UI fueron desarrollados por Héctor Ulises Montes Hernánd
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js?v=3')
+      navigator.serviceWorker.register('sw.js?v=4')
         .then(reg => console.log('Service Worker registrado'))
         .catch(err => console.log('Error at register Service Worker:', err));
     });
@@ -58,8 +58,9 @@ Nota: Este sitio y su UI fueron desarrollados por Héctor Ulises Montes Hernánd
     <h2 data-text="Busqueda de especificaciones">Busqueda de especificaciones</h2><br>
   </div>
 
-	<div class="seccion activa">
-		<h2>Bienvenido</h2>
+	<div class="seccion seccion-bienvenida activa">
+		<h2 data-text="Bienvenido">Bienvenido:</h2>
+		<p data-text="Selecciona una sección para empezar a buscar">Selecciona una sección para empezar a buscar</p>
 	</div>
 
 <!-- SECCION EMPAQUE -->
