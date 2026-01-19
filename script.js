@@ -35,8 +35,8 @@ async function cargarExcel() {
     });
 
     window.data = allData;
-    window._productoSpecs = allData.prod || [];
     window._empaqueData  = allData.emp  || [];
+    window._tstsData = allData.tsts || [];
     console.log("Datos cargados:", allData);
     
   } catch (error) {
@@ -45,78 +45,9 @@ async function cargarExcel() {
 }
 
 Promise.all([cargarExcel(), langReady]).then(() => {
-  initProducto(window._productoSpecs);
   initEmpaque(window._empaqueData);
+  initTsts(window._tstsData);
 });
-
-// ======================================================
-//  PRODUCTO (con soporte de idioma)
-// ======================================================
-function initProducto(specs) {
-  window._productoSpecs = specs;
-
-  const clienteSelect = document.getElementById("cliente");
-  const nombreSelect  = document.getElementById("nombre");
-  const parteInput    = document.getElementById("parte");
-  const resultsDiv    = document.getElementById("results-prod");
-
-  // Obtener valores únicos (ES internos)
-  const clientes = [...new Set(specs.map(s => s["CLIENTE"]))].filter(Boolean);
-  const nombres  = [...new Set(specs.map(s => s["NOMBRE"]))].filter(Boolean);
-
-  // Llenar selects usando helper de idioma
-  fillSelectFromExcel(clientes, clienteSelect, "-- Seleccionar cliente --");
-  fillSelectFromExcel(nombres, nombreSelect, "-- Seleccionar tipo --");
-
-  function buscarProducto() {
-    const parte   = parteInput.value.toLowerCase().trim();
-    const cliente = clienteSelect.value.toLowerCase();
-    const nombre  = nombreSelect.value.toLowerCase();
-
-    window._productoFiltered = specs.filter(spec => {
-      const partesArray = String(spec["NO. PARTE"] || "")
-        .split(",")
-        .map(p => p.trim().toLowerCase());
-
-      return (
-        (parte === "" || partesArray.some(p => p.includes(parte))) &&
-        (cliente === "" || String(spec["CLIENTE"]).toLowerCase() === cliente) &&
-        (nombre === "" || String(spec["NOMBRE"]).toLowerCase() === nombre)
-      );
-    });
-
-    renderProductoResultados();
-  }
-
-  function renderProductoResultados() {
-    resultsDiv.innerHTML = "";
-
-    window._productoFiltered.forEach(spec => {
-      const div = document.createElement("div");
-      div.className = "spec";
-
-      div.innerHTML = `
-        <strong>${spec["CLIENTE"]}</strong><br>
-        ${tDisplay("Código")}: ${spec["CODIGO"]}<br>
-        ${tDisplay("No. de Parte")}: ${spec["NO. PARTE"]}<br>
-        ${tDisplay("Nombre")}: ${spec["NOMBRE"]}<br>
-        <a href="${spec["LIGA"]}" target="_blank">${tDisplay("Abrir RMS")}</a>`;
-
-      resultsDiv.appendChild(div);
-    });
-  }
-
-  // Eventos
-  parteInput.addEventListener("input", buscarProducto);
-  clienteSelect.addEventListener("change", buscarProducto);
-  nombreSelect.addEventListener("change", buscarProducto);
-}
-
-//Función que lang.js espera
-window.renderProductoSelects = function () {
-  if (!window._productoSpecs.length) return;
-  initProducto(window._productoSpecs);
-};
 
 // ----------------------------
 // CAMBIO DE SECCIONES
@@ -291,4 +222,128 @@ function clearEmpaque(tbody, resultsRoot) {
 window.renderEmpaqueSelects = function () {
   if (!window._empaqueData.length) return;
   initEmpaque(window._empaqueData);
+};
+
+
+// ======================================================
+// TsTs: PLANTILLAS (con soporte de idioma)
+// ======================================================
+function initTsts(tstsData) {
+  window._tstsData = tstsData;
+
+  // Referencias a la UI de la sección TsTs
+  const selCliente   = document.getElementById("tsts-cliente");
+  const inputParte   = document.getElementById("tsts-parte");
+  const autoList     = document.getElementById("tsts-autocomplete");
+  const btnBuscar    = document.getElementById("tsts-btn-buscar");
+  const resultsRoot  = document.getElementById("tsts-results");
+
+  // Si no existe la sección en el DOM, no prosigue (igual que haces en Empaque)
+  if (!selCliente || !inputParte || !btnBuscar || !resultsRoot) return;
+
+  // ------- CLIENTES (select traducible) -------
+  const clientes = [...new Set(tstsData.map(x => String(x["CLIENTE"] ?? "").trim()))]
+                    .filter(Boolean)
+                    .sort();
+  // Usa tu helper existente para traducibles y placeholder:
+  fillSelectFromExcel(clientes, selCliente, "-- Seleccionar cliente --");
+
+  // ------- AUTOCOMPLETE por No. de Parte (filtrado opcional por cliente) -------
+  inputParte.addEventListener("input", () => {
+    const texto = inputParte.value.toLowerCase().trim();
+    autoList.innerHTML = "";
+    if (!texto) return;
+
+    const clienteSel = selCliente.value;
+    let fuente = tstsData;
+    if (clienteSel) {
+      fuente = fuente.filter(row => String(row["CLIENTE"]) === clienteSel);
+    }
+
+    // Únicos por parte en la fuente filtrada:
+    const partesUnicas = [...new Set(fuente.map(r => String(r["NO. DE PARTE"] ?? "")))]
+                          .filter(Boolean);
+
+    partesUnicas
+      .filter(p => p.toLowerCase().includes(texto))
+      .slice(0, 12) // límite de sugerencias
+      .forEach(p => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        div.textContent = p;
+        div.onclick = () => {
+          inputParte.value = p;
+          autoList.innerHTML = "";
+        };
+        autoList.appendChild(div);
+      });
+  });
+
+  // ------- BOTÓN BUSCAR -------
+  btnBuscar.addEventListener("click", buscarTsts);
+
+  function buscarTsts() {
+    const cliente = selCliente.value;
+    const parte    = inputParte.value.trim();
+
+    // Limpia resultados
+    resultsRoot.innerHTML = "";
+
+    // Validaciones
+    if (!cliente || !parte) {
+      resultsRoot.innerHTML = `<span class="msg-warn">${tDisplay("Seleccione CLIENTE y escriba un Número de pieza.")}</span>`;
+      return;
+    }
+
+    // Filtrado exacto (CLIENTE + NO. DE PARTE)
+    const matchRows = tstsData.filter(row =>
+      String(row["CLIENTE"])      === cliente &&
+      String(row["NO. DE PARTE"]) === parte
+    );
+
+    if (!matchRows.length) {
+      resultsRoot.innerHTML = `<span class="msg-empty">${tDisplay("No se encontraron plantillas para ese cliente y número de parte.")}</span>`;
+      return;
+    }
+
+    // Según tu requerimiento: encabezados arriba
+    const tipoPlantilla = String(matchRows[0]["TIPO DE PLANTILLA"] ?? "--");
+
+    // Encabezado superior (No. de Parte + Tipo de Plantilla)
+    let html = `
+      <h4><strong>${tDisplay("No. de Parte")}:</strong> ${parte}</h4>
+      <h4><strong>${tDisplay("Tipo de Plantilla")}:</strong> ${tipoPlantilla}</h4>
+      <br>
+    `;
+
+    // Tabla (usa los estilos ya definidos en styles.css)
+    html += `
+      <table class="emp-table">
+        <thead>
+          <tr class="table-title">
+            <th>${tDisplay("N° HOJA")}</th>
+            <th>${tDisplay("PLANTILLA")}</th>
+            <th>${tDisplay("MUESTRA")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${matchRows.map(row => `
+            <tr>
+              <td class="value-cell">${row["NO. DE HOJA"] ?? "--"}</td>
+              <td class="value-cell">${row["NO. DE PLANTILLA"] ?? "--"}</td>
+              <td class="value-cell">${row["NO. DE MUESTRA"] ?? "--"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+
+    resultsRoot.innerHTML = html;
+  }
+}
+
+// ------- Hooks para idioma, igual que Producto/Empaque -------
+window.renderTstsSelects = function () {
+  if (!window._tstsData?.length) return;
+  initTsts(window._tstsData);
 };
