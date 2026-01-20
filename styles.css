@@ -311,6 +311,18 @@ input::placeholder {
   text-align: center;
 }
 
+/* Encabezado simple para tablas (Empaque) */
+.table-header-simple {
+  background: var(--color-primary-light);
+  color: var(--color-gray-dark);
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  padding: 10px 14px;
+  border-radius: 6px 6px 0 0;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
 /* ============================================================
    MENSAJES (warn / empty)
    ============================================================ */
