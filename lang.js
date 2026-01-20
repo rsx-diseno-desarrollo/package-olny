@@ -69,6 +69,7 @@
     if (typeof window.renderEmpaqueSelects === 'function') window.renderEmpaqueSelects();
     if (typeof window.renderEmpaqueTable === 'function')   window.renderEmpaqueTable();
     if (typeof window.renderTstsSelects === 'function') window.renderTstsSelects();
+    if (typeof window.renderTstsTable === 'function') window.renderTstsTable();
   }
 
   // 5) Cambiar idioma (toggle)
