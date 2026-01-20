@@ -188,6 +188,7 @@ window.renderEmpaqueTable = function () {
     cap.id = "emp-cap";
     table.prepend(cap); // lo coloca como primer hijo de la tabla
   }
+  cap.className = "table-header-simple";
   cap.textContent = capText;
 
   // === Filas (dos columnas) ===
