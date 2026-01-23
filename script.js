@@ -212,7 +212,7 @@ window.renderEmpaqueTable = function () {
 
     const td = document.createElement("td");
     td.className = "value-cell";
-    td.textContent = value ?? "--";
+    td.textContent = tDisplay(value) ?? "--";
 
     tr.appendChild(th);
     tr.appendChild(td);
